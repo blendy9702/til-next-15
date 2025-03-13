@@ -1,253 +1,113 @@
-# Loading
+# error
 
-- page 출력시 오래 걸리는 작업인 경우 loading 을 표현.
-- Dynamic Page 에 활용하는데, 비동기 화면에 적용.
+- Next.js 에서 에러를 담당하는 error.tsx 파일이 있음.
+- `/src/app/(with-search)/error.tsx 파일` 생성
 
-## Next.js 에서 제공하는 loading.tsx
+## 주의사항
 
-- Page 에만 적용됨.
-- 약속된 파일명
-
-## 컴포넌트에서 loading을 처리하기 위해서 Suspense 를 활용.
-
-- 세밀한 loading 처리
-
-## Page에 로딩 처리
-
-- Dynamic Page 에 적용.
-- 비동기로서 async 화면에 적용됨.
-
-- /src/app/(with-search)/search/loading.tsx 생성
-- http://localhost:3000/search?keyword=jewelery
-- http://localhost:3000/search?keyword=electronics
+- 반드시 서버 뿐만아니라 클라이언트도 처리하도록 지시해야 함.
+- "use client" 지시자를 사용
 
 ```tsx
-export default function loading() {
-  return <div>Loading...</div>;
-}
-```
+"use client";
 
-### 주의 사항
-
-- 라우터 경로 하부는 무조건 위에 정의한 loading.tsx 만 사용함.
-- 각 라우터 마다 loading.tsx 를 설정하지 않으면 공통으로 사용됨.
-
-## 컴포넌트에 세밀한 로딩처리
-
-- React의 `Suspense` 로 처리
-- loading.tsx 제거
-- /src/app/(with-search)/search/page.tsx 수정
-
-```tsx
-import style from "@/app/(with-search)/search/page.module.css";
-import GoodItem from "@/components/good-item";
-import { GoodDataType } from "@/types/types";
-import { Suspense } from "react";
-
-async function SearchResult({ keyword }: { keyword: string }) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/products/category/${keyword}`
-  );
-  const goods: GoodDataType[] = await res.json();
-  if (goods.length === 0) {
-    return <div>{keyword} 카테고리에 해당하는 제품이 없습니다.</div>;
-  }
+export default function Error() {
   return (
     <div>
-      {goods.map((good) => (
-        <GoodItem key={good.id} {...good} />
-      ))}
+      <h3>에러가 발생함</h3>
     </div>
   );
 }
+```
 
-export default async function Page({
-  searchParams,
+## 에러의 메시지를 출력하는 경우
+
+```tsx
+"use client";
+export default function Error({ error }: { error: Error }) {
+  return (
+    <div>
+      <h3>{error.message} 에러가 발생했습니다.</h3>
+    </div>
+  );
+}
+```
+
+## 에러시 다시 실행하도록 함수를 props 로 전달
+
+- 개인적으로 reset 보다는 `웹브라우저 새로 고침을 권장`
+- reset 함수 : 컴포넌트 리랜더링을 시도함
+
+```tsx
+"use client";
+export default function Error({
+  error,
+  reset,
 }: {
-  searchParams: Promise<{ keyword: string }>;
+  error: Error;
+  reset: () => void;
 }) {
-  const { keyword } = await searchParams;
-
-  return (
-    <div className={style.container}>
-      <h4>
-        카테고리명 : <strong>{keyword}</strong> 검색페이지
-      </h4>
-      <Suspense
-        fallback={
-          <div>
-            <strong>{keyword}</strong> loading...
-          </div>
-        }
-      >
-        <SearchResult keyword={keyword} />
-      </Suspense>
-    </div>
-  );
-}
-```
-
-- /src/components/all-goods.tsx 수정
-- /src/components/random-goods.tsx 수정
-- /src/app/(with-search)/page.tsx 수정
-
-```tsx
-import style from "@/app/(with-search)/page.module.css";
-import { AllGoods } from "@/components/all-goods";
-import { RandomGoods } from "@/components/random-goods";
-import { Suspense } from "react";
-
-// 강제로 Dynamic 으로 변경하는 방안
-// next 에서는 apge를 강제로 변경하는 방법을 제공
-// export const dynamic = "auto"
-export const dynamic = "force-dynamic";
-
-export default function Home() {
-  return (
-    <div className={style.container}>
-      <section>
-        <h3>지금 추천하는 상품</h3>
-        <Suspense fallback={<div>추천 상품 로딩중...</div>}>
-          <RandomGoods />
-        </Suspense>
-      </section>
-      <section>
-        <h3>전체 상품</h3>
-        <Suspense fallback={<div>전체 상품 로딩중...</div>}>
-          <AllGoods />
-        </Suspense>
-      </section>
-    </div>
-  );
-}
-```
-
-## 스켈레톤 UI 적용하기
-
-- `/src/components/skeleton` 폴더 생성
-
-- `/src/components/skeleton/good-item-skeleton.tsx` 파일 생성
-
-```tsx
-import style from "@/components/skeleton/good-item-skeleton.module.css";
-
-export default function GoodItemSkeleton() {
-  return (
-    <div className={style.container}>
-      <div className={style.image}></div>
-      <div className={style.content}>
-        <div className={style.title}></div>
-        <div className={style.category}></div>
-        <br />
-        <div className={style.rating}></div>
-      </div>
-    </div>
-  );
-}
-```
-
-- `/src/components/skeleton/good-item-skeleton.module.css` 파일 생성
-
-```css
-.container {
-  display: flex;
-  gap: 15px;
-  padding: 20px 10px;
-  border-bottom: 1px solid rgb(220, 220, 220);
-  color: #000;
-  text-decoration: none;
-
-  height: 155px;
-}
-.container > .image {
-  width: 80px;
-  height: 115px;
-  background-color: rgb(220, 220, 220);
-}
-.content {
-  flex: 1;
-}
-.title {
-  height: 20px;
-  background-color: rgb(220, 220, 220);
-  margin-bottom: 10px;
-}
-.category {
-  height: 20px;
-  width: 50%;
-  background-color: rgb(220, 220, 220);
-}
-.rating {
-  height: 21px;
-  width: 30%;
-  background-color: rgb(220, 220, 220);
-}
-```
-
-### 갯수를 조금 더 편하게 처리하기
-
-- /src/components/skeleton/good-item-skeleton-list.tsx 생성
-
-```tsx
-import GoodItemSkeleton from "./good-item-skeleton";
-
-export default function GoodItemSkeletonList({ count }: { count: number }) {
-  const arr = new Array(count).fill(0);
   return (
     <div>
-      {arr.map((_, index) => (
-        <GoodItemSkeleton key={index} />
-      ))}
+      <h3>{error.message} 에러가 발생했습니다.</h3>
+      <button onClick={() => reset()}>다시 시도</button>
     </div>
   );
 }
 ```
 
-- src/app/(with-search)/page.tsx 수정
+## 에러시 웹브라우저 새로 고침 적용한다면
+
+- window.location.reload()
 
 ```tsx
-import style from "@/app/(with-search)/page.module.css";
-import { AllGoods } from "@/components/all-goods";
-import { RandomGoods } from "@/components/random-goods";
-import GoodItemSkeleton from "@/components/skeleton/good-item-skeleton";
-import GoodItemSkeletonList from "@/components/skeleton/good-item-skeleton-list";
-import { Suspense } from "react";
-
-// 강제로 Dynamic 으로 변경하는 방안
-// next 에서는 apge를 강제로 변경하는 방법을 제공
-// export const dynamic = "auto"
-export const dynamic = "force-dynamic";
-
-export default function Home() {
+"use client";
+export default function Error({ error }: { error: Error }) {
   return (
-    <div className={style.container}>
-      <section>
-        <h3>지금 추천하는 상품</h3>
-        <Suspense
-          fallback={
-            <div>
-              <GoodItemSkeletonList count={3} />
-            </div>
-          }
-        >
-          <RandomGoods />
-        </Suspense>
-      </section>
-      <section>
-        <h3>전체 상품</h3>
-        <Suspense
-          fallback={
-            <div>
-              <GoodItemSkeletonList count={5} />
-            </div>
-          }
-        >
-          <AllGoods />
-        </Suspense>
-      </section>
+    <div>
+      <h3>{error.message} 에러가 발생했습니다.</h3>
+      <button onClick={() => window.location.reload()}>다시 시도</button>
     </div>
   );
 }
 ```
 
-- 라이브러리 : https://github.com/dvtng/react-loading-skeleton#readme
+## 새로고침 없이 Next 에서 제공하는 기능 활용하기
+
+- Next 서버에 자료 다시 호출
+- 컴포넌트의 리랜더링까지 같이 진행
+
+```tsx
+"use client";
+
+import { useRouter } from "next/navigation";
+import { startTransition } from "react";
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error;
+  reset: () => void;
+}) {
+  const router = useRouter();
+  return (
+    <div>
+      <h3>{error.message} 에러가 발생했습니다.</h3>
+      {/* <button onClick={() => reset()}>다시 시도</button> */}
+      {/* <button onClick={() => window.location.reload()}>다시 시도</button> */}
+      <button
+        onClick={() => {
+          // react 18 버전에 추가
+          startTransition(() => {
+            router.refresh(); // 서버 컴포넌트 다시 실행하기를 요청
+            reset(); // 컴포넌트 새로고침
+          });
+        }}
+      >
+        다시 시도
+      </button>
+    </div>
+  );
+}
+```
