@@ -8,26 +8,26 @@
 
   height: 155px;
 }
-.container > .image {
+.image {
   width: 80px;
   height: 115px;
   background-color: rgb(220, 220, 220);
 }
-.content {
+.box {
   flex: 1;
 }
 .title {
-  height: 20px;
+  width: 50%;
+  height: 25px;
   background-color: rgb(220, 220, 220);
   margin-bottom: 10px;
 }
 .category {
+  width: 20%;
   height: 20px;
-  width: 50%;
   background-color: rgb(220, 220, 220);
 }
 .rating {
   height: 21px;
-  width: 30%;
   background-color: rgb(220, 220, 220);
 }
